@@ -9,7 +9,7 @@ import timnguoioghep from '../../data/timnguoioghep.json'
 import generateCode from '../ultis/generateCode'
 const moment = require('moment');
 require('dotenv').config();
-const dataBody = timnguoioghep.body
+const dataBody = chothuephongtro.body
 
 
 const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(12))
@@ -18,8 +18,8 @@ export const insertService = () => new Promise(async (resolve, reject) => {
     try {
         dataBody.forEach(async (item) => {
             let postId = v4()
-            let labelCode = generateCode(4)
-            let attributesId = generateCode(4)
+            let labelCode = generateCode(item?.header?.class?.classType)
+            let attributesId = v4()
             let userId = v4()
             let overviewId = v4()
             let imagesId = v4()
@@ -30,7 +30,7 @@ export const insertService = () => new Promise(async (resolve, reject) => {
                 labelCode,
                 address: item?.header.address,
                 attributesId,
-                categoryCode: 'TNOG',
+                categoryCode: 'CTPT',
                 description: JSON.stringify(item?.mainContent.content),
                 userId,
                 overviewId,
@@ -47,9 +47,12 @@ export const insertService = () => new Promise(async (resolve, reject) => {
                 id: imagesId,
                 image: JSON.stringify(item?.images)
             })
-            await db.Label.create({
-                code: labelCode,
-                value: item?.header?.class?.classType
+            await db.Label.findOrCreate({
+                where: { code: labelCode },
+                defaults: {
+                    code: labelCode,
+                    value: item?.header?.class?.classType
+                }
             })
             let createdString = item?.overview?.content.find(i => i.name === "Ngày đăng:")?.content;
             let created = moment(createdString, 'HH:mm DD/MM/YYYY').toDate();
