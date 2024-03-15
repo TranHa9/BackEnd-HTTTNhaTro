@@ -5,6 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Image extends Model {
         static associate(models) {
+            Image.hasOne(models.Post, { foreignKey: 'imagesId', as: 'images' })
         }
     }
     Image.init({

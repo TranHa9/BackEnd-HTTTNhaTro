@@ -39,7 +39,7 @@ export const insertService = () => new Promise(async (resolve, reject) => {
             await db.Attribute.create({
                 id: attributesId,
                 price: item?.header?.attributes.price,
-                acesge: item?.header?.attributes.acesge,
+                acreage: item?.header?.attributes.acreage,
                 published: item?.header?.attributes.published,
                 hashtag: item?.header?.attributes.hashtag,
             })

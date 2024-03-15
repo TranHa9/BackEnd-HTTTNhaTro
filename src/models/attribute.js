@@ -5,11 +5,12 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Attribute extends Model {
         static associate(models) {
+            Attribute.hasOne(models.Post, { foreignKey: 'attributesId', as: 'attributes' })
         }
     }
     Attribute.init({
         price: DataTypes.STRING,
-        acesge: DataTypes.STRING,
+        acreage: DataTypes.STRING,
         published: DataTypes.STRING,
         hashtag: DataTypes.STRING,
     }, {

@@ -10,7 +10,7 @@ module.exports = {
             price: {
                 type: Sequelize.STRING
             },
-            acesge: {
+            acreage: {
                 type: Sequelize.STRING
             },
             published: {
