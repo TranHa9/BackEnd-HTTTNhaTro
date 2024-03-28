@@ -6,10 +6,14 @@ import chothucanho from '../../data/chothucanho.json'
 import nhachothue from '../../data/nhachothue.json'
 import chothuephongtro from '../../data/chothuephongtro.json'
 import timnguoioghep from '../../data/timnguoioghep.json'
-import generateCode from '../ultis/generateCode'
+import generateCode from '../ultis/generateCode';
+import { dataPrices, dataAreas } from '../ultis/data';
+import { getNumberFromString } from '../ultis/common';
 const moment = require('moment');
 require('dotenv').config();
-const dataBody = chothuephongtro.body
+const dataBody = timnguoioghep.body
+
+// const prices = 
 
 
 const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(12))
@@ -19,10 +23,13 @@ export const insertService = () => new Promise(async (resolve, reject) => {
         dataBody.forEach(async (item) => {
             let postId = v4()
             let labelCode = generateCode(item?.header?.class?.classType)
+            let provinceCode = generateCode(item?.header?.address?.split(',')?.slice(-1)[0])
             let attributesId = v4()
             let userId = v4()
             let overviewId = v4()
             let imagesId = v4()
+            let currentArea = getNumberFromString(item?.header?.attributes?.acreage)
+            let currentPrice = getNumberFromString(item?.header?.attributes?.price)
             await db.Post.create({
                 id: postId,
                 title: item?.header?.title,
@@ -30,11 +37,14 @@ export const insertService = () => new Promise(async (resolve, reject) => {
                 labelCode,
                 address: item?.header.address,
                 attributesId,
-                categoryCode: 'CTPT',
+                categoryCode: 'TNOG',
                 description: JSON.stringify(item?.mainContent.content),
                 userId,
                 overviewId,
-                imagesId
+                imagesId,
+                areaCode: dataAreas.find(area => area.max > currentArea && area.min <= currentArea)?.code,
+                priceCode: dataPrices.find(price => price.max > currentPrice && price.min <= currentPrice)?.code,
+                provinceCode,
             })
             await db.Attribute.create({
                 id: attributesId,
@@ -42,6 +52,13 @@ export const insertService = () => new Promise(async (resolve, reject) => {
                 acreage: item?.header?.attributes.acreage,
                 published: item?.header?.attributes.published,
                 hashtag: item?.header?.attributes.hashtag,
+            })
+            await db.Province.findOrCreate({
+                where: { code: provinceCode },
+                defaults: {
+                    code: provinceCode,
+                    value: item?.header?.address?.split(',')?.slice(-1)[0]
+                }
             })
             await db.Image.create({
                 id: imagesId,
@@ -81,5 +98,27 @@ export const insertService = () => new Promise(async (resolve, reject) => {
         resolve("Done.")
     } catch (error) {
         reject(error)
+    }
+})
+
+export const createPricesAndAreas = () => new Promise((resolve, reject) => {
+    try {
+        dataPrices.forEach(async (item, index) => {
+            await db.Price.create({
+                code: item.code,
+                value: item.value,
+                order: index + 1
+            })
+        })
+        dataAreas.forEach(async (item, index) => {
+            await db.Area.create({
+                code: item.code,
+                value: item.value,
+                order: index + 1
+            })
+        })
+        resolve('OK')
+    } catch (err) {
+        reject(err)
     }
 })
