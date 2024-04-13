@@ -35,3 +35,21 @@ export const getNewPosts = async (req, res) => {
         })
     }
 }
+
+export const createNewPost = async (req, res) => {
+    try {
+        const { categoryCode, title, priceNumber, areaNumber, label } = req.body
+        const { id } = req.user
+        if (!categoryCode || !id || !title || !priceNumber || !areaNumber || !label) return res.status(400).json({
+            err: 1,
+            msg: 'Nhập thiếu input'
+        })
+        const response = await postService.createNewPostService(req.body, id)
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi post phía controller: ' + error
+        })
+    }
+}

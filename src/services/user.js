@@ -11,7 +11,7 @@ export const getOne = (id) => new Promise(async (resolve, reject) => {
         })
         resolve({
             err: response ? 0 : 1,
-            msg: response ? 'Thành công' : 'Lấy tỉnh thành thất bại',
+            msg: response ? 'Thành công' : 'Lấy người dùng thất bại',
             response
         })
     } catch (error) {

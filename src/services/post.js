@@ -1,5 +1,8 @@
 import db from "../models";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
+import { v4 as generateId } from 'uuid';
+import generateCode from '../ultis/generateCode';
+import moment from 'moment'
 
 export const getPostsService = () => new Promise(async (resolve, reject) => {
     try {
@@ -35,6 +38,9 @@ export const getPostsLimistService = (page, query, { priceNumber, areaNumber }) 
             nest: true,
             offset: offset * +process.env.LIMIT,
             limit: +process.env.LIMIT,
+            order: [
+                ['createdAt', 'DESC']
+            ],
             include: [
                 { model: db.Image, as: 'images', attributes: ['image'] },
                 { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
@@ -72,6 +78,75 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
             err: response ? 0 : 1,
             msg: response ? 'OK' : 'Lấy dữ liệu post thất bại',
             response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const createNewPostService = (body, userId) => new Promise(async (resolve, reject) => {
+    try {
+        const attributesId = generateId()
+        const imagesId = generateId()
+        const overviewId = generateId()
+        const labelCode = generateCode(body.label)
+        const hashtag = `#${Math.floor(Math.random() * Math.pow(10, 6))}`
+        const currentDate = new Date()
+        const response = await db.Post.create({
+            id: generateId(),
+            title: body.title,
+            labelCode,
+            address: body.address || null,
+            attributesId,
+            categoryCode: body.categoryCode,
+            description: JSON.stringify(body.description) || null,
+            userId,
+            overviewId,
+            imagesId,
+            areaCode: body.areaCode || null,
+            priceCode: body.priceCode || null,
+            provinceCode: generateCode(body.province) || null,
+            priceNumber: body.priceNumber,
+            areaNumber: body.areaNumber
+        })
+        await db.Attribute.create({
+            id: attributesId,
+            price: +body.priceNumber < 1 ? `${+body.priceNumber * 1000000} đồng/tháng` : `${+body.priceNumber} triệu/tháng`,
+            acreage: `${body.areaNumber} m2`,
+            published: moment(new Date).format('DD/MM/YYYY'),
+            hashtag,
+        })
+        await db.Image.create({
+            id: imagesId,
+            image: JSON.stringify(body.images)
+        })
+        await db.Overview.create({
+            id: overviewId,
+            code: hashtag,
+            area: body.label,
+            type: body?.category,
+            target: body?.target,
+            bonus: 'Tin thường',
+            created: new Date(),
+            expired: currentDate.setDate(currentDate.getDate() + 10)
+        })
+        await db.Province.findOrCreate({
+            where: { value: body?.province },
+            defaults: {
+                code: generateCode(body?.priceCode),
+                value: body?.province
+            }
+        })
+        await db.Label.findOrCreate({
+            where: { code: labelCode },
+            defaults: {
+                code: labelCode,
+                value: body.label
+            }
+        })
+        resolve({
+            err: 0,
+            msg: 'OK',
         })
     } catch (error) {
         reject(error)
