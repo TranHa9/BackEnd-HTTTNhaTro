@@ -1,3 +1,4 @@
+import { json } from 'sequelize';
 import * as postService from '../services/post';
 
 export const getPosts = async (req, res) => {
@@ -45,6 +46,26 @@ export const createNewPost = async (req, res) => {
             msg: 'Nhập thiếu input'
         })
         const response = await postService.createNewPostService(req.body, id)
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi post phía controller: ' + error
+        })
+    }
+}
+
+export const getPostsLimitAdmin = async (req, res) => {
+    const { page, ...query } = req.query
+    const { id } = req.user
+    try {
+        if (!id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Lỗi xác thực người dùng"
+            })
+        }
+        const response = await postService.getPostsLimistAdminService(page, id, query)
         return res.status(200).json(response)
     } catch (error) {
         return res.status(500).json({

@@ -9,5 +9,6 @@ router.get('/new-post', postControllers.getNewPosts)
 
 router.use(verifyToken)
 router.post('/create-new', postControllers.createNewPost)
+router.get('/limit-admin', postControllers.getPostsLimitAdmin)
 
 export default router

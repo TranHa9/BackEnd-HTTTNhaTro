@@ -5,6 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Overview extends Model {
         static associate(models) {
+            Overview.hasOne(models.Post, { foreignKey: 'overviewId', as: 'overviews' })
         }
     }
     Overview.init({

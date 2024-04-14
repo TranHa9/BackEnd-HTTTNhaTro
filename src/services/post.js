@@ -128,7 +128,7 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
             target: body?.target,
             bonus: 'Tin thường',
             created: new Date(),
-            expired: currentDate.setDate(currentDate.getDate() + 10)
+            expired: moment(currentDate).add(10, 'd').toDate()
         })
         await db.Province.findOrCreate({
             where: { value: body?.province },
@@ -147,6 +147,37 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
         resolve({
             err: 0,
             msg: 'OK',
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const getPostsLimistAdminService = (page, id, query) => new Promise(async (resolve, reject) => {
+    try {
+        let offset = (!page || +page <= 1) ? 0 : +page - 1
+        const queries = { ...query, userId: id }
+        const response = await db.Post.findAndCountAll({
+            where: queries,
+            raw: true,
+            nest: true,
+            offset: offset * +process.env.LIMIT,
+            limit: +process.env.LIMIT,
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            include: [
+                { model: db.Image, as: 'images', attributes: ['image'] },
+                { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
+                { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
+                { model: db.Overview, as: 'overviews' },
+            ],
+            attributes: ['id', 'title', 'star', 'address', 'description']
+        })
+        resolve({
+            err: response ? 0 : 1,
+            msg: response ? 'OK' : 'Lấy dữ liệu post thất bại',
+            response
         })
     } catch (error) {
         reject(error)
