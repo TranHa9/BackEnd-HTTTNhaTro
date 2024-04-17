@@ -74,3 +74,43 @@ export const getPostsLimitAdmin = async (req, res) => {
         })
     }
 }
+
+export const updatePost = async (req, res) => {
+    const { postId, attributesId, imagesId, overviewId, ...payload } = req.body
+    const { id } = req.user
+    try {
+        if (!postId || !attributesId || !imagesId || !overviewId || !id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Lỗi không tìm thấy id tin cần sửa hoặc lỗi người dùng"
+            })
+        }
+        const response = await postService.updatePost(req.body)
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi post phía controller: ' + error
+        })
+    }
+}
+
+export const deletePost = async (req, res) => {
+    const { postId } = req.query
+    const { id } = req.user
+    try {
+        if (!postId | !id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Lỗi không tìm thấy id tin cần sửa hoặc lỗi người dùng"
+            })
+        }
+        const response = await postService.deletePost(postId)
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi post phía controller: ' + error
+        })
+    }
+}

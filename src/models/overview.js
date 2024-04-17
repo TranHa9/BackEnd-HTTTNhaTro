@@ -10,8 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     }
     Overview.init({
         code: DataTypes.STRING,
-        area: DataTypes.STRING,
+        title: DataTypes.STRING,
         type: DataTypes.STRING,
+        target: DataTypes.STRING,
         bouns: DataTypes.STRING,
         created: DataTypes.DATE,
         expired: DataTypes.DATE,

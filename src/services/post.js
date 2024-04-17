@@ -92,7 +92,7 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
         const labelCode = generateCode(body.label)
         const hashtag = `#${Math.floor(Math.random() * Math.pow(10, 6))}`
         const currentDate = new Date()
-        const response = await db.Post.create({
+        await db.Post.create({
             id: generateId(),
             title: body.title,
             labelCode,
@@ -123,7 +123,7 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
         await db.Overview.create({
             id: overviewId,
             code: hashtag,
-            area: body.label,
+            title: body.label,
             type: body?.category,
             target: body?.target,
             bonus: 'Tin thường',
@@ -172,11 +172,86 @@ export const getPostsLimistAdminService = (page, id, query) => new Promise(async
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
                 { model: db.Overview, as: 'overviews' },
             ],
-            attributes: ['id', 'title', 'star', 'address', 'description']
+            //attributes: ['id', 'title', 'star', 'address', 'description']
         })
         resolve({
             err: response ? 0 : 1,
             msg: response ? 'OK' : 'Lấy dữ liệu post thất bại',
+            response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const updatePost = ({ postId, attributesId, imagesId, overviewId, ...body }) => new Promise(async (resolve, reject) => {
+    try {
+        const labelCode = generateCode(body.label)
+        await db.Post.update({
+            title: body.title,
+            labelCode,
+            address: body.address || null,
+            categoryCode: body.categoryCode,
+            description: JSON.stringify(body.description) || null,
+            areaCode: body.areaCode || null,
+            priceCode: body.priceCode || null,
+            provinceCode: generateCode(body.province) || null,
+            priceNumber: body.priceNumber,
+            areaNumber: body.areaNumber
+        }, {
+            where: { id: postId }
+        })
+        await db.Attribute.update({
+            price: +body.priceNumber < 1 ? `${+body.priceNumber * 1000000} đồng/tháng` : `${+body.priceNumber} triệu/tháng`,
+            acreage: `${body.areaNumber} m2`,
+        }, {
+            where: { id: attributesId }
+        })
+        await db.Image.update({
+            image: JSON.stringify(body.images)
+        }, {
+            where: { id: imagesId }
+        })
+        await db.Overview.update({
+            title: body.label,
+            type: body?.category,
+            target: body?.target,
+        }, {
+            where: {
+                id: overviewId
+            }
+        })
+        await db.Province.findOrCreate({
+            where: { value: body?.province },
+            defaults: {
+                code: generateCode(body?.priceCode),
+                value: body?.province
+            }
+        })
+        await db.Label.findOrCreate({
+            where: { code: labelCode },
+            defaults: {
+                code: labelCode,
+                value: body.label
+            }
+        })
+        resolve({
+            err: 0,
+            msg: 'Đã chỉnh sửa',
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const deletePost = (postId) => new Promise(async (resolve, reject) => {
+    try {
+        const response = await db.Post.destroy({
+            where: { id: postId },
+        })
+        resolve({
+            err: response > 0 ? 0 : 1,
+            msg: response > 0 ? 'Đã Xóa' : 'Không tìm thấy bản ghi cần xóa',
             response
         })
     } catch (error) {

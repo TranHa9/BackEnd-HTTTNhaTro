@@ -10,10 +10,13 @@ module.exports = {
             code: {
                 type: Sequelize.STRING
             },
-            area: {
+            title: {
                 type: Sequelize.STRING
             },
             type: {
+                type: Sequelize.STRING
+            },
+            target: {
                 type: Sequelize.STRING
             },
             bouns: {
