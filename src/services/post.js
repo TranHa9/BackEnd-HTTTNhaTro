@@ -10,11 +10,8 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
             raw: true,
             nest: true,
             include: [
-                { model: db.Image, as: 'images', attributes: ['image'] },
-                { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
             ],
-            attributes: ['id', 'title', 'star', 'address', 'description']
         })
         resolve({
             err: response ? 0 : 1,
@@ -26,27 +23,27 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
     }
 })
 
-export const getPostsLimistService = (page, query, { priceNumber, areaNumber }) => new Promise(async (resolve, reject) => {
+export const getPostsLimistService = (page, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
-        if (priceNumber) queries.priceNumber = { [Op.between]: priceNumber }
-        if (areaNumber) queries.areaNumber = { [Op.between]: areaNumber }
+        const limit = +limitPost || +process.env.LIMIT
+        queries.limit = limit
+        if (price) query.price = { [Op.between]: price }
+        if (area) query.area = { [Op.between]: area }
+        if (provinceId) query.provinceId = provinceId;
+        if (districtId) query.districtId = districtId;
+        if (wardId) query.wardId = wardId;
+        if (order) queries.order = [order]
         const response = await db.Post.findAndCountAll({
-            where: queries,
+            where: query,
             raw: true,
             nest: true,
-            offset: offset * +process.env.LIMIT,
-            limit: +process.env.LIMIT,
-            order: [
-                ['createdAt', 'DESC']
-            ],
+            offset: offset * limit,
+            ...queries,
             include: [
-                { model: db.Image, as: 'images', attributes: ['image'] },
-                { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
             ],
-            attributes: ['id', 'title', 'star', 'address', 'description']
         })
         resolve({
             err: response ? 0 : 1,
@@ -68,11 +65,6 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
                 ['createdAt', 'DESC']
             ],
             limit: +process.env.LIMIT,
-            include: [
-                { model: db.Image, as: 'images', attributes: ['image'] },
-                { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
-            ],
-            attributes: ['id', 'title', 'star', 'createdAt']
         })
         resolve({
             err: response ? 0 : 1,
@@ -86,63 +78,23 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
 
 export const createNewPostService = (body, userId) => new Promise(async (resolve, reject) => {
     try {
-        const attributesId = generateId()
-        const imagesId = generateId()
-        const overviewId = generateId()
-        const labelCode = generateCode(body.label)
-        const hashtag = `#${Math.floor(Math.random() * Math.pow(10, 6))}`
-        const currentDate = new Date()
+        //const currentDate = new Date()
         await db.Post.create({
-            id: generateId(),
-            title: body.title,
-            labelCode,
+            name: body.name,
             address: body.address || null,
-            attributesId,
-            categoryCode: body.categoryCode,
-            description: JSON.stringify(body.description) || null,
+            categoryId: body.categoryId,
+            description: body.description || null,
             userId,
-            overviewId,
-            imagesId,
-            areaCode: body.areaCode || null,
-            priceCode: body.priceCode || null,
-            provinceCode: generateCode(body.province) || null,
-            priceNumber: body.priceNumber,
-            areaNumber: body.areaNumber
-        })
-        await db.Attribute.create({
-            id: attributesId,
-            price: +body.priceNumber < 1 ? `${+body.priceNumber * 1000000} đồng/tháng` : `${+body.priceNumber} triệu/tháng`,
-            acreage: `${body.areaNumber} m2`,
-            published: moment(new Date).format('DD/MM/YYYY'),
-            hashtag,
-        })
-        await db.Image.create({
-            id: imagesId,
-            image: JSON.stringify(body.images)
-        })
-        await db.Overview.create({
-            id: overviewId,
-            code: hashtag,
-            title: body.label,
-            type: body?.category,
+            images: JSON.stringify(body.images),
             target: body?.target,
-            bonus: 'Tin thường',
+            area: body.area || null,
+            price: body.price || null,
+            provinceId: body.provinceId || null,
+            districtId: body.districtId || null,
+            wardId: body?.wardId || null,
             created: new Date(),
-            expired: moment(currentDate).add(10, 'd').toDate()
-        })
-        await db.Province.findOrCreate({
-            where: { value: body?.province },
-            defaults: {
-                code: generateCode(body?.priceCode),
-                value: body?.province
-            }
-        })
-        await db.Label.findOrCreate({
-            where: { code: labelCode },
-            defaults: {
-                code: labelCode,
-                value: body.label
-            }
+            expired: body.expired
+            //expired: moment(currentDate).add(10, 'd').toDate()
         })
         resolve({
             err: 0,
@@ -167,12 +119,8 @@ export const getPostsLimistAdminService = (page, id, query) => new Promise(async
                 ['createdAt', 'DESC']
             ],
             include: [
-                { model: db.Image, as: 'images', attributes: ['image'] },
-                { model: db.Attribute, as: 'attributes', attributes: ['price', 'acreage', 'published', 'hashtag'] },
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
-                { model: db.Overview, as: 'overviews' },
             ],
-            //attributes: ['id', 'title', 'star', 'address', 'description']
         })
         resolve({
             err: response ? 0 : 1,
@@ -184,56 +132,20 @@ export const getPostsLimistAdminService = (page, id, query) => new Promise(async
     }
 })
 
-export const updatePost = ({ postId, attributesId, imagesId, overviewId, ...body }) => new Promise(async (resolve, reject) => {
+export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, reject) => {
     try {
         const labelCode = generateCode(body.label)
         await db.Post.update({
-            title: body.title,
-            labelCode,
+            name: body.name,
             address: body.address || null,
-            categoryCode: body.categoryCode,
-            description: JSON.stringify(body.description) || null,
-            areaCode: body.areaCode || null,
-            priceCode: body.priceCode || null,
-            provinceCode: generateCode(body.province) || null,
-            priceNumber: body.priceNumber,
-            areaNumber: body.areaNumber
+            categoryId: body.categoryId,
+            description: body.description || null,
+            area: body.area || null,
+            price: body.price || null,
+            target: body.target || null,
+            images: JSON.stringify(body.images),
         }, {
             where: { id: postId }
-        })
-        await db.Attribute.update({
-            price: +body.priceNumber < 1 ? `${+body.priceNumber * 1000000} đồng/tháng` : `${+body.priceNumber} triệu/tháng`,
-            acreage: `${body.areaNumber} m2`,
-        }, {
-            where: { id: attributesId }
-        })
-        await db.Image.update({
-            image: JSON.stringify(body.images)
-        }, {
-            where: { id: imagesId }
-        })
-        await db.Overview.update({
-            title: body.label,
-            type: body?.category,
-            target: body?.target,
-        }, {
-            where: {
-                id: overviewId
-            }
-        })
-        await db.Province.findOrCreate({
-            where: { value: body?.province },
-            defaults: {
-                code: generateCode(body?.priceCode),
-                value: body?.province
-            }
-        })
-        await db.Label.findOrCreate({
-            where: { code: labelCode },
-            defaults: {
-                code: labelCode,
-                value: body.label
-            }
         })
         resolve({
             err: 0,

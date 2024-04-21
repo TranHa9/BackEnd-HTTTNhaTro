@@ -5,28 +5,23 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Post extends Model {
         static associate(models) {
-            Post.belongsTo(models.Image, { foreignKey: 'imagesId', targetKey: 'id', as: 'images' })
-            Post.belongsTo(models.Attribute, { foreignKey: 'attributesId', targetKey: 'id', as: 'attributes' })
-            Post.belongsTo(models.Overview, { foreignKey: 'overviewId', targetKey: 'id', as: 'overviews' })
             Post.belongsTo(models.User, { foreignKey: 'userId', targetKey: 'id', as: 'user' })
+            Post.belongsTo(models.Category, { foreignKey: 'categoryId', targetKey: 'id', as: 'category' });
         }
     }
     Post.init({
-        title: DataTypes.STRING,
-        star: DataTypes.STRING,
-        labelCode: DataTypes.STRING,
+        name: DataTypes.STRING,
         address: DataTypes.STRING,
-        attributesId: DataTypes.STRING,
-        categoryCode: DataTypes.STRING,
-        priceCode: DataTypes.STRING,
-        provinceCode: DataTypes.STRING,
-        areaCode: DataTypes.STRING,
         description: DataTypes.TEXT,
-        userId: DataTypes.STRING,
-        overviewId: DataTypes.STRING,
-        imagesId: DataTypes.STRING,
-        priceNumber: DataTypes.FLOAT,
-        areaNumber: DataTypes.FLOAT,
+        target: DataTypes.STRING,
+        images: DataTypes.STRING,
+        price: DataTypes.FLOAT,
+        area: DataTypes.FLOAT,
+        provinceId: DataTypes.INTEGER,
+        districtId: DataTypes.INTEGER,
+        wardId: DataTypes.INTEGER,
+        created: DataTypes.DATE,
+        expired: DataTypes.DATE
     }, {
         sequelize,
         modelName: 'Post',

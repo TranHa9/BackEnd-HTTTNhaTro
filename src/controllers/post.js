@@ -13,9 +13,9 @@ export const getPosts = async (req, res) => {
     }
 }
 export const getPostsLimit = async (req, res) => {
-    const { page, priceNumber, areaNumber, ...query } = req.query
+    const { page, price, area, provinceId, districtId, wardId, ...query } = req.query
     try {
-        const response = await postService.getPostsLimistService(page, query, { priceNumber, areaNumber })
+        const response = await postService.getPostsLimistService(page, query, { price, area, provinceId, districtId, wardId })
         return res.status(200).json(response)
     } catch (error) {
         return res.status(500).json({
@@ -39,9 +39,9 @@ export const getNewPosts = async (req, res) => {
 
 export const createNewPost = async (req, res) => {
     try {
-        const { categoryCode, title, priceNumber, areaNumber, label } = req.body
+        const { categoryId, name, price, area } = req.body
         const { id } = req.user
-        if (!categoryCode || !id || !title || !priceNumber || !areaNumber || !label) return res.status(400).json({
+        if (!categoryId || !id || !name || !price || !area) return res.status(400).json({
             err: 1,
             msg: 'Nhập thiếu input'
         })
@@ -76,10 +76,10 @@ export const getPostsLimitAdmin = async (req, res) => {
 }
 
 export const updatePost = async (req, res) => {
-    const { postId, attributesId, imagesId, overviewId, ...payload } = req.body
+    const { postId, ...payload } = req.body
     const { id } = req.user
     try {
-        if (!postId || !attributesId || !imagesId || !overviewId || !id) {
+        if (!postId || !id) {
             return res.status(400).json({
                 err: 1,
                 msg: "Lỗi không tìm thấy id tin cần sửa hoặc lỗi người dùng"

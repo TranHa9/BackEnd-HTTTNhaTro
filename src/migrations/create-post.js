@@ -5,56 +5,64 @@ module.exports = {
             id: {
                 allowNull: false,
                 primaryKey: true,
-                type: Sequelize.STRING
+                autoIncrement: true,
+                type: Sequelize.INTEGER
             },
-            title: {
-                type: Sequelize.STRING
-            },
-            star: {
-                type: Sequelize.STRING,
-                defaultValue: '0'
-            },
-            labelCode: {
-                type: Sequelize.STRING
-            },
-            address: {
-                type: Sequelize.STRING
-            },
-            attributesId: {
-                type: Sequelize.STRING
-            },
-            categoryCode: {
-                type: Sequelize.STRING
-            },
-            priceCode: {
-                type: Sequelize.STRING
-            },
-            provinceCode: {
-                type: Sequelize.STRING
-            },
-            areaCode: {
-                type: Sequelize.STRING
-            },
-            userId: {
+            name: {
                 type: Sequelize.STRING
             },
             description: {
                 type: Sequelize.TEXT
             },
+            address: {
+                type: Sequelize.STRING
+            },
+            images: {
+                type: Sequelize.STRING
+            },
+            area: {
+                type: Sequelize.FLOAT
+            },
+            price: {
+                type: Sequelize.FLOAT
+            },
+            target: {
+                type: Sequelize.STRING
+            },
+            provinceId: {
+                type: Sequelize.INTEGER
+            },
+            districtId: {
+                type: Sequelize.INTEGER
+            },
+            wardId: {
+                type: Sequelize.INTEGER
+            },
+            created: {
+                type: Sequelize.DATE
+            },
+            expired: {
+                type: Sequelize.DATE
+            },
             userId: {
-                type: Sequelize.STRING
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'Users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE'
             },
-            overviewId: {
-                type: Sequelize.STRING
-            },
-            imagesId: {
-                type: Sequelize.STRING
-            },
-            priceNumber: {
-                type: Sequelize.FLOAT
-            },
-            areaNumber: {
-                type: Sequelize.FLOAT
+            categoryId: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'Categories',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE'
             },
             createdAt: {
                 allowNull: false,

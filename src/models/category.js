@@ -5,13 +5,14 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Category extends Model {
         static associate(models) {
+            Category.hasMany(models.Post, { foreignKey: 'categoryId', as: 'category' })
         }
     }
     Category.init({
-        code: DataTypes.STRING,
-        value: DataTypes.STRING,
-        header: DataTypes.STRING,
-        subheader: DataTypes.STRING,
+        // code: DataTypes.STRING,
+        name: DataTypes.STRING,
+        title: DataTypes.STRING,
+        description: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'Category',

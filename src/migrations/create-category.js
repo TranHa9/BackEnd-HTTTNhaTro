@@ -8,16 +8,16 @@ module.exports = {
                 autoIncrement: true,
                 type: Sequelize.INTEGER
             },
-            code: {
+            // code: {
+            //     type: Sequelize.STRING
+            // },
+            name: {
                 type: Sequelize.STRING
             },
-            value: {
+            title: {
                 type: Sequelize.STRING
             },
-            header: {
-                type: Sequelize.STRING
-            },
-            subheader: {
+            description: {
                 type: Sequelize.STRING
             },
             createdAt: {
