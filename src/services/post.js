@@ -43,7 +43,7 @@ export const getPostsLimistService = (page, { limitPost, order, ...query }, { pr
             ...queries,
             include: [
                 { model: db.Category, as: 'category' },
-                { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
+                { model: db.User, as: 'user' },
             ],
         })
         resolve({
