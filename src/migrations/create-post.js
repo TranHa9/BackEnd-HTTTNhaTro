@@ -18,7 +18,7 @@ module.exports = {
                 type: Sequelize.STRING
             },
             images: {
-                type: Sequelize.STRING
+                type: Sequelize.TEXT
             },
             area: {
                 type: Sequelize.FLOAT
