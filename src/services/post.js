@@ -106,6 +106,93 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
     }
 })
 
+
+//Thêm tin muốn lưu
+export const addSavedPost = (postId, userId) => new Promise(async (resolve, reject) => {
+    try {
+        const post = await db.Post.findByPk(postId);
+        if (!post) {
+            return reject({ error: 'Bài post không tồn tại' });
+        }
+        const existingSavedPost = await db.SavePost.findOne({
+            where: {
+                userId,
+                postId
+            }
+        });
+        if (existingSavedPost) {
+            return reject({ error: 'Bài post đã được lưu trước đó' });
+        }
+        await db.SavePost.create({
+            userId,
+            postId
+        })
+        resolve({
+            err: 0,
+            msg: 'OK',
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+//hiển thị tin  đã lưu
+export const getSavePostsLimistService = (page, userId, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+    try {
+        let offset = (!page || +page <= 1) ? 0 : +page - 1
+        const queries = { ...query }
+        const limit = +limitPost || +process.env.LIMIT
+        queries.limit = limit
+        query.userId = userId
+        if (price) query.price = { [Op.between]: price }
+        if (area) query.area = { [Op.between]: area }
+        if (provinceId) query.provinceId = provinceId;
+        if (districtId) query.districtId = districtId;
+        if (wardId) query.wardId = wardId;
+        if (order) queries.order = [order]
+        const response = await db.SavePost.findAndCountAll({
+            where: query,
+            raw: true,
+            nest: true,
+            offset: offset * limit,
+            ...queries,
+            include: [
+                {
+                    model: db.Post,
+                    as: 'post',
+                    include: [
+                        { model: db.Category, as: 'category' },
+                        { model: db.User, as: 'user' }
+                    ]
+                }
+            ],
+        })
+        resolve({
+            err: response ? 0 : 1,
+            msg: response ? 'OK' : 'Lấy dữ liệu post đã lưu thất bại',
+            response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+//Xóa tin đã lưu
+export const deleteSavePost = (savePostId) => new Promise(async (resolve, reject) => {
+    try {
+        const response = await db.SavePost.destroy({
+            where: { postId: savePostId },
+        })
+        resolve({
+            err: response > 0 ? 0 : 1,
+            msg: response > 0 ? 'Đã Xóa' : 'Không tìm thấy bản ghi cần xóa',
+            response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
 export const getPostsLimistAdminService = (page, id, query) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1

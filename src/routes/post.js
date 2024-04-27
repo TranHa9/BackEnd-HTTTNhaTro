@@ -12,5 +12,8 @@ router.post('/create-new', postControllers.createNewPost)
 router.get('/limit-admin', postControllers.getPostsLimitAdmin)
 router.put('/update-post', postControllers.updatePost)
 router.delete('/delete-post', postControllers.deletePost)
+router.post('/save-post', postControllers.addSavePost)
+router.get('/limt-save-post', postControllers.getSavePostsLimit)
+router.delete('/delete-save-post', postControllers.deleteSavePost)
 
 export default router
