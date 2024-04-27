@@ -193,19 +193,36 @@ export const deleteSavePost = (savePostId) => new Promise(async (resolve, reject
     }
 })
 
-export const getPostsLimistAdminService = (page, id, query) => new Promise(async (resolve, reject) => {
+export const getPostsLimistAdminService = (page, id, { limitPost, order, expired, ...query }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
-        const queries = { ...query, userId: id }
+        const queries = { ...query }
+        const limit = +limitPost || +process.env.LIMIT
+        queries.limit = limit
+        query.userId = id
+        if (order) queries.order = [order]
+        if (expired && expired !== '0') {
+            // Chuyển đổi expired thành một số nguyên
+            const expiredInt = parseInt(expired);
+            // Kiểm tra xem giá trị có phải là một số hay không
+            if (!isNaN(expiredInt)) {
+                const currentDate = new Date();
+                if (expiredInt === 1) {
+                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                } else if (expiredInt === 2) {
+                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+                }
+            }
+        }
         const response = await db.Post.findAndCountAll({
-            where: queries,
+            where: query,
             raw: true,
             nest: true,
-            offset: offset * +process.env.LIMIT,
-            limit: +process.env.LIMIT,
-            order: [
-                ['createdAt', 'DESC']
-            ],
+            offset: offset * limit,
+            ...queries,
+            // order: [
+            //     ['createdAt', 'DESC']
+            // ],
             include: [
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
             ],
