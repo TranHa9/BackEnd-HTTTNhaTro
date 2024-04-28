@@ -239,7 +239,6 @@ export const getPostsLimistAdminService = (page, id, { limitPost, order, expired
 
 export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, reject) => {
     try {
-        const labelCode = generateCode(body.label)
         await db.Post.update({
             name: body.name,
             address: body.address || null,

@@ -31,14 +31,27 @@ export const loginService = ({ phone, password }) => new Promise(async (resolve,
     try {
         const response = await db.User.findOne({
             where: { phone },
-            raw: true
+            raw: true,
+            attributes: ['id', 'phone', 'roleId', 'password']
         })
+        if (!response) {
+            resolve({
+                err: 2,
+                msg: "Số điện thoại không chính xác",
+                token: null,
+                user: null
+            });
+            return;
+        }
         const checkPassword = response && bcrypt.compareSync(password, response.password)
         const token = checkPassword && jwt.sign({ id: response.id, phone: response.phone }, process.env.SECRET_KEY, { expiresIn: '2d' })
+        delete response.password
+        const user = checkPassword ? response : {}
         resolve({
             err: token ? 0 : 2,
-            msg: token ? "Đăng nhập thành công !" : response ? "Mật khẩu không chính xác !" : "Số điện thoại không chính xác",
-            token: token || null
+            msg: token ? "Đăng nhập thành công !" : "Mật khẩu không chính xác !",
+            token: token || null,
+            user
         })
     } catch (error) {
         reject(error)

@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
         districtId: DataTypes.INTEGER,
         wardId: DataTypes.INTEGER,
         created: DataTypes.DATE,
-        expired: DataTypes.DATE
+        expired: DataTypes.DATE,
+        statusId: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'Post',
