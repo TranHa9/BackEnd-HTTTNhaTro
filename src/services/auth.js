@@ -32,7 +32,7 @@ export const loginService = ({ phone, password }) => new Promise(async (resolve,
         const response = await db.User.findOne({
             where: { phone },
             raw: true,
-            attributes: ['id', 'phone', 'roleId', 'password']
+            attributes: ['id', 'name', 'phone', 'roleId', 'password']
         })
         if (!response) {
             resolve({

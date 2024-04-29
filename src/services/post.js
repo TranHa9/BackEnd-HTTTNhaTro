@@ -12,6 +12,7 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
             include: [
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
             ],
+            where: { statusId: 'S2' }
         })
         resolve({
             err: response ? 0 : 1,
@@ -23,7 +24,7 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
     }
 })
 
-export const getPostsLimistService = (page, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+export const getPostsLimistService = (page, { limitPost, order, expired, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -35,8 +36,21 @@ export const getPostsLimistService = (page, { limitPost, order, ...query }, { pr
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
+        if (expired && expired !== '0') {
+            // Chuyển đổi expired thành một số nguyên
+            const expiredInt = parseInt(expired);
+            // Kiểm tra xem giá trị có phải là một số hay không
+            if (!isNaN(expiredInt)) {
+                const currentDate = new Date();
+                if (expiredInt === 1) {
+                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                } else if (expiredInt === 2) {
+                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+                }
+            }
+        }
         const response = await db.Post.findAndCountAll({
-            where: query,
+            where: { ...query, statusId: 'S2' },
             raw: true,
             nest: true,
             offset: offset * limit,
@@ -94,8 +108,9 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
             districtId: body.districtId || null,
             wardId: body?.wardId || null,
             created: new Date(),
-            expired: body.expired
+            expired: body.expired,
             //expired: moment(currentDate).add(10, 'd').toDate()
+            statusId: 'S1'
         })
         resolve({
             err: 0,
@@ -215,7 +230,7 @@ export const getPostsLimistAdminService = (page, id, { limitPost, order, expired
             }
         }
         const response = await db.Post.findAndCountAll({
-            where: query,
+            where: { ...query, statusId: 'S2' },
             raw: true,
             nest: true,
             offset: offset * limit,
@@ -248,6 +263,8 @@ export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, r
             price: body.price || null,
             target: body.target || null,
             images: JSON.stringify(body.images),
+            expired: body.expired,
+            statusId: body.statusId || 'S1'
         }, {
             where: { id: postId }
         })
@@ -268,6 +285,52 @@ export const deletePost = (postId) => new Promise(async (resolve, reject) => {
         resolve({
             err: response > 0 ? 0 : 1,
             msg: response > 0 ? 'Đã Xóa' : 'Không tìm thấy bản ghi cần xóa',
+            response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const getPostsStatusService = (page, { limitPost, order, expired, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+    try {
+        let offset = (!page || +page <= 1) ? 0 : +page - 1
+        const queries = { ...query }
+        const limit = +limitPost || +process.env.LIMIT
+        queries.limit = limit
+        if (price) query.price = { [Op.between]: price }
+        if (area) query.area = { [Op.between]: area }
+        if (provinceId) query.provinceId = provinceId;
+        if (districtId) query.districtId = districtId;
+        if (wardId) query.wardId = wardId;
+        if (order) queries.order = [order]
+        if (expired && expired !== '0') {
+            // Chuyển đổi expired thành một số nguyên
+            const expiredInt = parseInt(expired);
+            // Kiểm tra xem giá trị có phải là một số hay không
+            if (!isNaN(expiredInt)) {
+                const currentDate = new Date();
+                if (expiredInt === 1) {
+                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                } else if (expiredInt === 2) {
+                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+                }
+            }
+        }
+        const response = await db.Post.findAndCountAll({
+            where: { ...query, statusId: 'S1' },
+            raw: true,
+            nest: true,
+            offset: offset * limit,
+            ...queries,
+            include: [
+                { model: db.Category, as: 'category' },
+                { model: db.User, as: 'user' },
+            ],
+        })
+        resolve({
+            err: response ? 0 : 1,
+            msg: response ? 'OK' : 'Lấy dữ liệu post thất bại',
             response
         })
     } catch (error) {
