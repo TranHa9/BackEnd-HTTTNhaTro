@@ -16,5 +16,6 @@ router.post('/save-post', postControllers.addSavePost)
 router.get('/limt-save-post', postControllers.getSavePostsLimit)
 router.delete('/delete-save-post', postControllers.deleteSavePost)
 router.get('/status-post', postControllers.getSavePostsStatus)
+router.get('/status-all-post', postControllers.getPostsAllStatus)
 
 export default router

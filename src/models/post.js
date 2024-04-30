@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         wardId: DataTypes.INTEGER,
         created: DataTypes.DATE,
         expired: DataTypes.DATE,
-        statusId: DataTypes.STRING,
+        status: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'Post',

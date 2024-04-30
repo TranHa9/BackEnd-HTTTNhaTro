@@ -9,20 +9,31 @@ const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(12
 
 export const registerService = ({ phone, password, name }) => new Promise(async (resolve, reject) => {
     try {
-        const response = await db.User.findOrCreate({
+        const [user, created] = await db.User.findOrCreate({
             where: { phone },
             defaults: {
                 phone,
                 name,
-                password: hashPassword(password)
+                password: hashPassword(password),
+                role: 'user'
             }
         })
-        const token = response[1] && jwt.sign({ id: response[0].id, phone: response[0].phone }, process.env.SECRET_KEY, { expiresIn: '2d' })
-        resolve({
-            err: token ? 0 : 2,
-            msg: token ? "Đăng ký thành công !" : "Số điện thoại này đã được sử dụng",
-            token: token || null
-        })
+        if (created) {
+            const token = jwt.sign({ id: user.id, phone: user.phone }, process.env.SECRET_KEY, { expiresIn: '2d' })
+            resolve({
+                err: 0,
+                msg: "Đăng ký thành công !",
+                user,
+                token
+            });
+        } else {
+            resolve({
+                err: 2,
+                msg: "Số điện thoại này đã được sử dụng",
+                token: null,
+                user: null
+            })
+        }
     } catch (error) {
         reject(error)
     }
@@ -32,7 +43,7 @@ export const loginService = ({ phone, password }) => new Promise(async (resolve,
         const response = await db.User.findOne({
             where: { phone },
             raw: true,
-            attributes: ['id', 'name', 'phone', 'roleId', 'password']
+            attributes: ['id', 'name', 'phone', 'role', 'password']
         })
         if (!response) {
             resolve({

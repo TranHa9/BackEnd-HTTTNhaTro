@@ -6,13 +6,13 @@ import bcrypt from 'bcryptjs';
 
 const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(12))
 
-export const createUser = ({ name, phone, password, roleId }) => new Promise(async (resolve, reject) => {
+export const createUser = ({ name, phone, password, role }) => new Promise(async (resolve, reject) => {
     try {
         const response = await db.User.create({
             name: name,
             password: hashPassword(password),
             phone: phone,
-            roleId: roleId
+            role: role
         })
         resolve({
             err: response ? 0 : 1,
@@ -88,10 +88,9 @@ export const updateUserData = ({ userId, ...body }) => new Promise(async (resolv
         await db.User.update({
             name: body.name,
             phone: body.phone,
-            zalo: body.zalo || null,
-            fbUrl: body.fbUrl || null,
-            avatar: body.avatar || null,
-            roleId: body.roleId,
+            zalo: body.zalo,
+            avatar: body.avatar,
+            role: body.role,
         }, {
             where: { id: userId }
         })

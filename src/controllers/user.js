@@ -2,9 +2,9 @@ import * as services from '../services/user';
 
 
 export const createUser = async (req, res) => {
-    const { name, phone, password, roleId } = req.body
+    const { name, phone, password, role } = req.body
     try {
-        if (!name || !phone || !password || !roleId) return res.status(400).json({
+        if (!name || !phone || !password || !role) return res.status(400).json({
             err: 1,
             msg: "Lỗi nhập inputs!"
         })

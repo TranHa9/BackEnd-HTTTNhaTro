@@ -12,7 +12,7 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
             include: [
                 { model: db.User, as: 'user', attributes: ['name', 'zalo', 'phone'] },
             ],
-            where: { statusId: 'S2' }
+            where: { status: 'Đã duyệt' }
         })
         resolve({
             err: response ? 0 : 1,
@@ -50,7 +50,7 @@ export const getPostsLimistService = (page, { limitPost, order, expired, ...quer
             }
         }
         const response = await db.Post.findAndCountAll({
-            where: { ...query, statusId: 'S2' },
+            where: { ...query, status: 'Đã duyệt' },
             raw: true,
             nest: true,
             offset: offset * limit,
@@ -80,6 +80,7 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
                 ['createdAt', 'DESC']
             ],
             limit: +process.env.LIMIT,
+            where: { status: 'Đã duyệt' }
         })
         resolve({
             err: response ? 0 : 1,
@@ -110,7 +111,7 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
             created: new Date(),
             expired: body.expired,
             //expired: moment(currentDate).add(10, 'd').toDate()
-            statusId: 'S1'
+            status: 'Đang chờ duyệt'
         })
         resolve({
             err: 0,
@@ -120,7 +121,6 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
         reject(error)
     }
 })
-
 
 //Thêm tin muốn lưu
 export const addSavedPost = (postId, userId) => new Promise(async (resolve, reject) => {
@@ -132,7 +132,7 @@ export const addSavedPost = (postId, userId) => new Promise(async (resolve, reje
         const existingSavedPost = await db.SavePost.findOne({
             where: {
                 userId,
-                postId
+                postId,
             }
         });
         if (existingSavedPost) {
@@ -140,7 +140,7 @@ export const addSavedPost = (postId, userId) => new Promise(async (resolve, reje
         }
         await db.SavePost.create({
             userId,
-            postId
+            postId,
         })
         resolve({
             err: 0,
@@ -178,7 +178,8 @@ export const getSavePostsLimistService = (page, userId, { limitPost, order, ...q
                     include: [
                         { model: db.Category, as: 'category' },
                         { model: db.User, as: 'user' }
-                    ]
+                    ],
+                    where: { status: 'Đã duyệt' }
                 }
             ],
         })
@@ -208,7 +209,7 @@ export const deleteSavePost = (savePostId) => new Promise(async (resolve, reject
     }
 })
 
-export const getPostsLimistAdminService = (page, id, { limitPost, order, expired, ...query }) => new Promise(async (resolve, reject) => {
+export const getPostsLimistAdminService = (page, id, { limitPost, order, status, ...query }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -216,21 +217,31 @@ export const getPostsLimistAdminService = (page, id, { limitPost, order, expired
         queries.limit = limit
         query.userId = id
         if (order) queries.order = [order]
-        if (expired && expired !== '0') {
-            // Chuyển đổi expired thành một số nguyên
-            const expiredInt = parseInt(expired);
-            // Kiểm tra xem giá trị có phải là một số hay không
-            if (!isNaN(expiredInt)) {
-                const currentDate = new Date();
-                if (expiredInt === 1) {
-                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
-                } else if (expiredInt === 2) {
-                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+        if (status) {
+            const statusInt = parseInt(status);
+            if (statusInt && statusInt !== 0 && statusInt <= 2) {
+                if (!isNaN(statusInt)) {
+                    const currentDate = new Date();
+                    if (statusInt === 1) {
+                        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã duyệt' };
+                    } else if (statusInt === 2) {
+                        query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã duyệt' };
+                    }
+                }
+            } else if (statusInt !== 0 && statusInt > 2) {
+                if (!isNaN(statusInt)) {
+                    if (statusInt === 3) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
+                    } else if (statusInt === 4) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                    }
                 }
             }
         }
         const response = await db.Post.findAndCountAll({
-            where: { ...query, statusId: 'S2' },
+            where: query,
             raw: true,
             nest: true,
             offset: offset * limit,
@@ -256,15 +267,15 @@ export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, r
     try {
         await db.Post.update({
             name: body.name,
-            address: body.address || null,
+            address: body.address,
             categoryId: body.categoryId,
-            description: body.description || null,
-            area: body.area || null,
-            price: body.price || null,
-            target: body.target || null,
+            description: body.description,
+            area: body.area,
+            price: body.price,
+            target: body.target,
             images: JSON.stringify(body.images),
             expired: body.expired,
-            statusId: body.statusId || 'S1'
+            status: body.status
         }, {
             where: { id: postId }
         })
@@ -292,7 +303,7 @@ export const deletePost = (postId) => new Promise(async (resolve, reject) => {
     }
 })
 
-export const getPostsStatusService = (page, { limitPost, order, expired, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+export const getPostsStatusService = (page, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -304,21 +315,64 @@ export const getPostsStatusService = (page, { limitPost, order, expired, ...quer
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
-        if (expired && expired !== '0') {
-            // Chuyển đổi expired thành một số nguyên
-            const expiredInt = parseInt(expired);
-            // Kiểm tra xem giá trị có phải là một số hay không
-            if (!isNaN(expiredInt)) {
-                const currentDate = new Date();
-                if (expiredInt === 1) {
-                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
-                } else if (expiredInt === 2) {
-                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+        const response = await db.Post.findAndCountAll({
+            where: { ...query, status: 'Đang chờ duyệt' },
+            raw: true,
+            nest: true,
+            offset: offset * limit,
+            ...queries,
+            include: [
+                { model: db.Category, as: 'category' },
+                { model: db.User, as: 'user' },
+            ],
+        })
+        resolve({
+            err: response ? 0 : 1,
+            msg: response ? 'OK' : 'Lấy dữ liệu post thất bại',
+            response
+        })
+    } catch (error) {
+        reject(error)
+    }
+})
+
+export const getPostsAllService = (page, { limitPost, order, status, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+    try {
+        let offset = (!page || +page <= 1) ? 0 : +page - 1
+        const queries = { ...query }
+        const limit = +limitPost || +process.env.LIMIT
+        queries.limit = limit
+        if (price) query.price = { [Op.between]: price }
+        if (area) query.area = { [Op.between]: area }
+        if (provinceId) query.provinceId = provinceId;
+        if (districtId) query.districtId = districtId;
+        if (wardId) query.wardId = wardId;
+        if (order) queries.order = [order]
+        if (status) {
+            const statusInt = parseInt(status);
+            if (statusInt && statusInt !== 0 && statusInt <= 2) {
+                if (!isNaN(statusInt)) {
+                    const currentDate = new Date();
+                    if (statusInt === 1) {
+                        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã duyệt' };
+                    } else if (statusInt === 2) {
+                        query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã duyệt' };
+                    }
+                }
+            } else if (statusInt > 2) {
+                if (!isNaN(statusInt)) {
+                    if (statusInt === 3) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
+                    } else if (statusInt === 4) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                    }
                 }
             }
         }
         const response = await db.Post.findAndCountAll({
-            where: { ...query, statusId: 'S1' },
+            where: query,
             raw: true,
             nest: true,
             offset: offset * limit,

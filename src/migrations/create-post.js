@@ -64,8 +64,10 @@ module.exports = {
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE'
             },
-            statusId: {
-                type: Sequelize.STRING
+            status: {
+                type: Sequelize.ENUM('Đang chờ duyệt', 'Đã duyệt', 'Đã hủy'),
+                allowNull: false,
+                defaultValue: 'Đang chờ duyệt'
             },
             createdAt: {
                 allowNull: false,

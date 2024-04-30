@@ -179,3 +179,16 @@ export const getSavePostsStatus = async (req, res) => {
         })
     }
 }
+
+export const getPostsAllStatus = async (req, res) => {
+    const { page, price, area, provinceId, districtId, wardId, ...query } = req.query
+    try {
+        const response = await postService.getPostsAllService(page, query, { price, area, provinceId, districtId, wardId })
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi post phía controller: ' + error
+        })
+    }
+}

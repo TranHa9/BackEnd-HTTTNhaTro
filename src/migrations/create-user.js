@@ -20,14 +20,13 @@ module.exports = {
       zalo: {
         type: Sequelize.STRING
       },
-      fbUrl: {
-        type: Sequelize.STRING
-      },
       avatar: {
         type: Sequelize.BLOB('long')
       },
-      roleId: {
-        type: Sequelize.STRING
+      role: {
+        type: Sequelize.ENUM('admin', 'user'),
+        allowNull: false,
+        defaultValue: 'user' // Giá trị mặc định là 'user'
       },
       createdAt: {
         allowNull: false,
