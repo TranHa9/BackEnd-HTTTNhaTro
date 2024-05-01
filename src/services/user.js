@@ -117,3 +117,38 @@ export const deleteUser = (userId) => new Promise(async (resolve, reject) => {
         reject(error)
     }
 })
+
+export const updatePassword = ({ userId, oldPassword, newPassword, confirmPassword }) => new Promise(async (resolve, reject) => {
+    try {
+        const user = await db.User.findOne({ where: { id: userId } });
+        if (!user) {
+            resolve({
+                err: 1,
+                msg: 'Người dùng không tồn tại',
+            });
+            return;
+        }
+        const isPasswordValid = user && bcrypt.compareSync(oldPassword, user.password)
+        if (!isPasswordValid) {
+            resolve({
+                err: 2,
+                msg: 'Mật khẩu cũ không chính xác',
+            });
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            resolve({
+                err: 3,
+                msg: 'Mật khẩu mới và xác nhận mật khẩu không khớp',
+            });
+            return;
+        }
+        await user.update({ password: hashPassword(newPassword) })
+        resolve({
+            err: 0,
+            msg: 'Đã chỉnh sửa',
+        })
+    } catch (error) {
+        reject(error)
+    }
+})

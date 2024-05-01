@@ -99,3 +99,20 @@ export const deleteUser = async (req, res) => {
         })
     }
 }
+
+export const updatePassword = async (req, res) => {
+    const { userId, oldPassword, newPassword, confirmPassword } = req.body
+    try {
+        if (!userId || !oldPassword || !newPassword || !confirmPassword) return res.status(400).json({
+            err: 1,
+            msg: "Thiếu input"
+        })
+        const response = await services.updatePassword({ userId, oldPassword, newPassword, confirmPassword })
+        return res.status(200).json(response)
+    } catch (error) {
+        return res.status(500).json({
+            err: -1,
+            msg: 'Lỗi ở user controller ' + error
+        })
+    }
+}

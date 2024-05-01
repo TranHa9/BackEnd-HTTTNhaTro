@@ -11,5 +11,6 @@ router.post('/create-user', userController.createUser)
 router.get('/get-all-user', userController.getAllUser)
 router.delete('/delete-user', userController.deleteUser)
 router.put('/update-user', userController.updateUserData)
+router.put('/update-password-user', userController.updatePassword)
 
 export default router
