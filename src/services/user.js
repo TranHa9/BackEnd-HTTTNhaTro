@@ -23,12 +23,19 @@ export const createUser = ({ name, phone, password, role }) => new Promise(async
     }
 })
 
-export const getAllUser = (page, { limitUser, ...query }) => new Promise(async (resolve, reject) => {
+export const getAllUser = (page, { limitUser, userValue, role, ...query }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
         const limit = +limitUser || +process.env.LIMIT
         queries.limit = limit
+        if (userValue) {
+            query[db.Sequelize.Op.or] = [
+                { name: { [db.Sequelize.Op.like]: `%${userValue}%` } },
+                { phone: { [db.Sequelize.Op.like]: `%${userValue}%` } }
+            ];
+        }
+        if (role && role != '') query.role = role
         const response = await db.User.findAndCountAll({
             where: query,
             raw: true,

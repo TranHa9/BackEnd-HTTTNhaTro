@@ -295,7 +295,7 @@ export const deletePost = (postId) => new Promise(async (resolve, reject) => {
     }
 })
 //Lấy tất cả bài đăng đang chờ duyệt
-export const getPostsStatusService = (page, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+export const getPostsStatusService = (page, { limitPost, order, userName, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -306,7 +306,10 @@ export const getPostsStatusService = (page, { limitPost, order, ...query }, { pr
         if (provinceId) query.provinceId = provinceId;
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
-        if (order) queries.order = [order]
+        if (order) queries.order = [order];
+        if (userName) {
+            query['$user.name$'] = { [db.Sequelize.Op.like]: `%${userName}%` };
+        }
         const response = await db.Post.findAndCountAll({
             where: { ...query, status: 'Đang chờ duyệt' },
             raw: true,
