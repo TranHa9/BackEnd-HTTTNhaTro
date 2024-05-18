@@ -107,7 +107,7 @@ export const deleteSavePost = async (req, res) => {
     }
 }
 
-export const getPostsLimitAdmin = async (req, res) => {
+export const getPostsLimitUser = async (req, res) => {
     const { page, ...query } = req.query
     const { id } = req.user
     try {
@@ -117,7 +117,7 @@ export const getPostsLimitAdmin = async (req, res) => {
                 msg: "Lỗi xác thực người dùng"
             })
         }
-        const response = await postService.getPostsLimistAdminService(page, id, query)
+        const response = await postService.getPostsLimistUserService(page, id, query)
         return res.status(200).json(response)
     } catch (error) {
         return res.status(500).json({
@@ -180,10 +180,10 @@ export const getSavePostsStatus = async (req, res) => {
     }
 }
 
-export const getPostsAllStatus = async (req, res) => {
+export const getPostsAllAdmin = async (req, res) => {
     const { page, price, area, provinceId, districtId, wardId, ...query } = req.query
     try {
-        const response = await postService.getPostsAllService(page, query, { price, area, provinceId, districtId, wardId })
+        const response = await postService.getPostsAllAdminService(page, query, { price, area, provinceId, districtId, wardId })
         return res.status(200).json(response)
     } catch (error) {
         return res.status(500).json({

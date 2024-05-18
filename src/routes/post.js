@@ -9,13 +9,13 @@ router.get('/new-post', postControllers.getNewPosts)
 
 router.use(verifyToken)
 router.post('/create-new', postControllers.createNewPost)
-router.get('/limit-admin', postControllers.getPostsLimitAdmin)
+router.get('/limit-user', postControllers.getPostsLimitUser)
 router.put('/update-post', postControllers.updatePost)
 router.delete('/delete-post', postControllers.deletePost)
 router.post('/save-post', postControllers.addSavePost)
 router.get('/limt-save-post', postControllers.getSavePostsLimit)
 router.delete('/delete-save-post', postControllers.deleteSavePost)
 router.get('/status-post', postControllers.getSavePostsStatus)
-router.get('/status-all-post', postControllers.getPostsAllStatus)
+router.get('/admin-all-post', postControllers.getPostsAllAdmin)
 
 export default router

@@ -23,7 +23,7 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
         reject(error)
     }
 })
-
+//Lấy tất cả bài đăng đã duyệt và còn hoạt động
 export const getPostsLimistService = (page, { limitPost, order, expired, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -36,19 +36,8 @@ export const getPostsLimistService = (page, { limitPost, order, expired, ...quer
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
-        if (expired && expired !== '0') {
-            // Chuyển đổi expired thành một số nguyên
-            const expiredInt = parseInt(expired);
-            // Kiểm tra xem giá trị có phải là một số hay không
-            if (!isNaN(expiredInt)) {
-                const currentDate = new Date();
-                if (expiredInt === 1) {
-                    query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
-                } else if (expiredInt === 2) {
-                    query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
-                }
-            }
-        }
+        const currentDate = new Date();
+        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
         const response = await db.Post.findAndCountAll({
             where: { ...query, status: 'Đã duyệt' },
             raw: true,
@@ -70,6 +59,7 @@ export const getPostsLimistService = (page, { limitPost, order, expired, ...quer
     }
 })
 
+//Lấy tất cả các bài đăng mới nhất
 export const getNewPostService = () => new Promise(async (resolve, reject) => {
     try {
         const response = await db.Post.findAll({
@@ -92,6 +82,7 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
     }
 })
 
+//Tạo bài đăng mới
 export const createNewPostService = (body, userId) => new Promise(async (resolve, reject) => {
     try {
         //const currentDate = new Date()
@@ -151,7 +142,7 @@ export const addSavedPost = (postId, userId) => new Promise(async (resolve, reje
     }
 })
 
-//hiển thị tin  đã lưu
+//Hiển thị tin  đã lưu
 export const getSavePostsLimistService = (page, userId, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -209,7 +200,8 @@ export const deleteSavePost = (savePostId) => new Promise(async (resolve, reject
     }
 })
 
-export const getPostsLimistAdminService = (page, id, { limitPost, order, status, ...query }) => new Promise(async (resolve, reject) => {
+//Lấy các bài đăng theo người dùng
+export const getPostsLimistUserService = (page, id, { limitPost, order, status, ...query }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -262,7 +254,7 @@ export const getPostsLimistAdminService = (page, id, { limitPost, order, status,
         reject(error)
     }
 })
-
+//Cập nhật bài đăng
 export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, reject) => {
     try {
         await db.Post.update({
@@ -287,7 +279,7 @@ export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, r
         reject(error)
     }
 })
-
+//Xóa bài đăng
 export const deletePost = (postId) => new Promise(async (resolve, reject) => {
     try {
         const response = await db.Post.destroy({
@@ -302,7 +294,7 @@ export const deletePost = (postId) => new Promise(async (resolve, reject) => {
         reject(error)
     }
 })
-
+//Lấy tất cả bài đăng đang chờ duyệt
 export const getPostsStatusService = (page, { limitPost, order, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -335,8 +327,8 @@ export const getPostsStatusService = (page, { limitPost, order, ...query }, { pr
         reject(error)
     }
 })
-
-export const getPostsAllService = (page, { limitPost, order, status, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
+//Lấy tất cả bài đăng lấy tất cả bài đăng đã duyệt
+export const getPostsAllAdminService = (page, { limitPost, order, status, categoryId, useName, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
         const queries = { ...query }
@@ -348,6 +340,7 @@ export const getPostsAllService = (page, { limitPost, order, status, ...query },
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
+        if (categoryId && categoryId != '0') query.categoryId = categoryId
         if (status) {
             const statusInt = parseInt(status);
             if (statusInt && statusInt !== 0 && statusInt <= 2) {
@@ -370,6 +363,9 @@ export const getPostsAllService = (page, { limitPost, order, status, ...query },
                     }
                 }
             }
+        }
+        if (useName) {
+            query['$user.name$'] = { [db.Sequelize.Op.like]: `%${useName}%` };
         }
         const response = await db.Post.findAndCountAll({
             where: query,
