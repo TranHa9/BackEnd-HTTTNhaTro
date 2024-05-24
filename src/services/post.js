@@ -23,7 +23,7 @@ export const getPostsService = () => new Promise(async (resolve, reject) => {
         reject(error)
     }
 })
-//Lấy tất cả bài đăng đã duyệt và còn hoạt động
+//Lấy tất cả bài đăng đã duyệt
 export const getPostsLimistService = (page, { limitPost, order, expired, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -36,8 +36,6 @@ export const getPostsLimistService = (page, { limitPost, order, expired, ...quer
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
-        const currentDate = new Date();
-        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
         const response = await db.Post.findAndCountAll({
             where: { ...query, status: 'Đã duyệt' },
             raw: true,
@@ -85,7 +83,6 @@ export const getNewPostService = () => new Promise(async (resolve, reject) => {
 //Tạo bài đăng mới
 export const createNewPostService = (body, userId) => new Promise(async (resolve, reject) => {
     try {
-        //const currentDate = new Date()
         await db.Post.create({
             name: body.name,
             address: body.address || null,
@@ -101,7 +98,6 @@ export const createNewPostService = (body, userId) => new Promise(async (resolve
             wardId: body?.wardId || null,
             created: new Date(),
             expired: body.expired,
-            //expired: moment(currentDate).add(10, 'd').toDate()
             status: 'Đang chờ duyệt'
         })
         resolve({
