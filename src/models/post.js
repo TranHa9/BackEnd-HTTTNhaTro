@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         created: DataTypes.DATE,
         expired: DataTypes.DATE,
         status: DataTypes.STRING,
+        report: DataTypes.TEXT,
     }, {
         sequelize,
         modelName: 'Post',

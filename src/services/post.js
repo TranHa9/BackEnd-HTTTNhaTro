@@ -36,8 +36,9 @@ export const getPostsLimistService = (page, { limitPost, order, expired, ...quer
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
+        const currentDate = new Date();
         const response = await db.Post.findAndCountAll({
-            where: { ...query, status: 'Đã duyệt' },
+            where: { ...query, status: 'Đã duyệt', expired: { [db.Sequelize.Op.gte]: currentDate } },
             raw: true,
             nest: true,
             offset: offset * limit,
@@ -152,6 +153,7 @@ export const getSavePostsLimistService = (page, userId, { limitPost, order, ...q
         if (districtId) query.districtId = districtId;
         if (wardId) query.wardId = wardId;
         if (order) queries.order = [order]
+        const currentDate = new Date();
         const response = await db.SavePost.findAndCountAll({
             where: query,
             raw: true,
@@ -166,7 +168,7 @@ export const getSavePostsLimistService = (page, userId, { limitPost, order, ...q
                         { model: db.Category, as: 'category' },
                         { model: db.User, as: 'user' }
                     ],
-                    where: { status: 'Đã duyệt' }
+                    where: { status: 'Đã duyệt', expired: { [db.Sequelize.Op.gte]: currentDate } }
                 }
             ],
         })
@@ -224,6 +226,8 @@ export const getPostsLimistUserService = (page, id, { limitPost, order, status, 
                         query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
                     } else if (statusInt === 4) {
                         query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                    } else if (statusInt === 5) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Hết phòng' };
                     }
                 }
             }
@@ -263,7 +267,8 @@ export const updatePost = ({ postId, ...body }) => new Promise(async (resolve, r
             target: body.target,
             images: JSON.stringify(body.images),
             expired: body.expired,
-            status: body.status
+            status: body.status,
+            report: body.report
         }, {
             where: { id: postId }
         })
@@ -290,7 +295,7 @@ export const deletePost = (postId) => new Promise(async (resolve, reject) => {
         reject(error)
     }
 })
-//Lấy tất cả bài đăng đang chờ duyệt
+//Lấy tất cả bài đăng đang chờ duyệt (admin)
 export const getPostsStatusService = (page, { limitPost, order, userName, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -326,7 +331,7 @@ export const getPostsStatusService = (page, { limitPost, order, userName, ...que
         reject(error)
     }
 })
-//Lấy tất cả bài đăng lấy tất cả bài đăng đã duyệt
+//Lấy tất cả bài đăng lấy tất cả bài đăng đã duyệt (admin)
 export const getPostsAllAdminService = (page, { limitPost, order, status, categoryId, useName, ...query }, { price, area, provinceId, districtId, wardId }) => new Promise(async (resolve, reject) => {
     try {
         let offset = (!page || +page <= 1) ? 0 : +page - 1
@@ -346,7 +351,7 @@ export const getPostsAllAdminService = (page, { limitPost, order, status, catego
                 if (!isNaN(statusInt)) {
                     const currentDate = new Date();
                     if (statusInt === 1) {
-                        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired >= currentDate
+                        query.expired = { [db.Sequelize.Op.gte]: currentDate }; // Lấy các bài đăng có expired (thời hạn) >= currentDate (thời gian hiện tại)
                         query.status = { [db.Sequelize.Op.eq]: 'Đã duyệt' };
                     } else if (statusInt === 2) {
                         query.expired = { [db.Sequelize.Op.lt]: currentDate }; // Lấy các bài đăng có expired < currentDate
@@ -359,6 +364,8 @@ export const getPostsAllAdminService = (page, { limitPost, order, status, catego
                         query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
                     } else if (statusInt === 4) {
                         query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                    } else if (statusInt === 5) {
+                        query.status = { [db.Sequelize.Op.eq]: 'Hết phòng' };
                     }
                 }
             }

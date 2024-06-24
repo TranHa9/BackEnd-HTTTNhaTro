@@ -44,6 +44,9 @@ module.exports = {
             expired: {
                 type: Sequelize.DATE
             },
+            report: {
+                type: Sequelize.TEXT
+            },
             userId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
