@@ -68,7 +68,7 @@ module.exports = {
                 onDelete: 'CASCADE'
             },
             status: {
-                type: Sequelize.ENUM('Đang chờ duyệt', 'Đã duyệt', 'Đã hủy'),
+                type: Sequelize.ENUM('Đang chờ duyệt', 'Đã duyệt', 'Đã từ chối', 'Hết phòng'),
                 allowNull: false,
                 defaultValue: 'Đang chờ duyệt'
             },

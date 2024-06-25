@@ -225,7 +225,7 @@ export const getPostsLimistUserService = (page, id, { limitPost, order, status, 
                     if (statusInt === 3) {
                         query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
                     } else if (statusInt === 4) {
-                        query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã từ chối' };
                     } else if (statusInt === 5) {
                         query.status = { [db.Sequelize.Op.eq]: 'Hết phòng' };
                     }
@@ -363,7 +363,7 @@ export const getPostsAllAdminService = (page, { limitPost, order, status, catego
                     if (statusInt === 3) {
                         query.status = { [db.Sequelize.Op.eq]: 'Đang chờ duyệt' };
                     } else if (statusInt === 4) {
-                        query.status = { [db.Sequelize.Op.eq]: 'Đã hủy' };
+                        query.status = { [db.Sequelize.Op.eq]: 'Đã từ chối' };
                     } else if (statusInt === 5) {
                         query.status = { [db.Sequelize.Op.eq]: 'Hết phòng' };
                     }
